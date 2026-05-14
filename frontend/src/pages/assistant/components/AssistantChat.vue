@@ -62,6 +62,37 @@
                 Платеж/доход {{ percent(message.result.loanMetrics.paymentToIncome) }}
               </el-tag>
             </div>
+
+            <div
+              v-if="message.mlResult && message.aiAssessment && message.comparison"
+              class="comparison-grid"
+            >
+              <section class="comparison-card">
+                <span>Classic ML</span>
+                <strong>{{ percent(message.mlResult.defaultProbability) }}</strong>
+                <el-tag
+                  :type="message.mlResult.borrowerClass === 'good' ? 'success' : 'danger'"
+                  effect="light"
+                >
+                  {{ message.mlResult.recommendation }}
+                </el-tag>
+              </section>
+              <section class="comparison-card">
+                <span>LLM</span>
+                <strong>{{ percent(message.aiAssessment.defaultProbability) }}</strong>
+                <el-tag
+                  :type="message.aiAssessment.borrowerClass === 'good' ? 'success' : 'danger'"
+                  effect="light"
+                >
+                  {{ message.aiAssessment.recommendation }}
+                </el-tag>
+              </section>
+              <section class="comparison-card comparison-card--wide">
+                <span>{{ message.comparison.agreement ? 'Решения совпали' : 'Есть расхождение' }}</span>
+                <strong>{{ percent(message.comparison.probabilityGap) }}</strong>
+                <p>{{ message.comparison.summary }}</p>
+              </section>
+            </div>
           </div>
         </article>
 
@@ -106,7 +137,9 @@ import type { ScrollbarInstance } from 'element-plus';
 import { nextTick, ref, watch } from 'vue';
 
 import type {
+  AiAssessment,
   BorrowerCard,
+  PredictionComparison,
   ScoringResult,
 } from '@/api/generated/creditpulse';
 
@@ -115,6 +148,9 @@ interface ChatMessage {
   role: 'user' | 'agent';
   text: string;
   result?: ScoringResult;
+  mlResult?: ScoringResult;
+  aiAssessment?: AiAssessment;
+  comparison?: PredictionComparison;
 }
 
 const props = defineProps<{
@@ -262,6 +298,44 @@ watch(
   margin-top: 12px;
 }
 
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.comparison-card {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  background: var(--el-fill-color-blank);
+  padding: 12px;
+
+  span {
+    color: var(--app-muted);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  strong {
+    font-size: 24px;
+    line-height: 1;
+  }
+
+  p {
+    margin: 0;
+    color: var(--app-muted);
+    font-size: 13px;
+  }
+
+  &--wide {
+    grid-column: 1 / -1;
+  }
+}
+
 .loading-bubble {
   display: inline-flex;
   align-items: center;
@@ -289,7 +363,8 @@ watch(
   }
 
   .summary-strip,
-  .chat-composer {
+  .chat-composer,
+  .comparison-grid {
     grid-template-columns: 1fr;
   }
 }

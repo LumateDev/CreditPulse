@@ -5,10 +5,8 @@ services:
       dockerfile: Dockerfile
     container_name: creditpulse-backend
     env_file:
-      - path: .env.example
-        required: true
       - path: .env
-        required: false
+        required: true
     expose:
       - "8000"
     healthcheck:

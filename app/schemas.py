@@ -58,6 +58,21 @@ class ScoringResult(BaseModel):
     loan_metrics: LoanMetrics = Field(alias="loanMetrics")
 
 
+class AiAssessment(BaseModel):
+    default_probability: float = Field(alias="defaultProbability")
+    borrower_class: Literal["good", "bad"] = Field(alias="borrowerClass")
+    recommendation: str
+    risk_level: Literal["low", "medium", "high"] = Field(alias="riskLevel")
+    confidence: float
+    reasoning_summary: str = Field(alias="reasoningSummary")
+
+
+class PredictionComparison(BaseModel):
+    agreement: bool
+    probability_gap: float = Field(alias="probabilityGap")
+    summary: str
+
+
 class AnalyzeRequest(BaseModel):
     borrower_id: str | None = Field(default=None, alias="borrowerId")
     borrower: Borrower | None = None
@@ -67,6 +82,9 @@ class AnalyzeRequest(BaseModel):
 class AnalyzeResponse(BaseModel):
     borrower: BorrowerCard
     result: ScoringResult
+    ml_result: ScoringResult = Field(alias="mlResult")
+    ai_assessment: AiAssessment = Field(alias="aiAssessment")
+    comparison: PredictionComparison
     explanation: str
 
 
