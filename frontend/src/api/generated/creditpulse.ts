@@ -19,7 +19,38 @@ export interface AnalyzeRequest {
 export interface AnalyzeResponse {
   borrower: BorrowerCard;
   result: ScoringResult;
+  mlResult: ScoringResult;
+  aiAssessment: AiAssessment;
+  comparison: PredictionComparison;
   explanation: string;
+}
+
+export type AiAssessmentBorrowerClass = typeof AiAssessmentBorrowerClass[keyof typeof AiAssessmentBorrowerClass];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AiAssessmentBorrowerClass = {
+  good: 'good',
+  bad: 'bad',
+} as const;
+
+export type AiAssessmentRiskLevel = typeof AiAssessmentRiskLevel[keyof typeof AiAssessmentRiskLevel];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AiAssessmentRiskLevel = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export interface AiAssessment {
+  defaultProbability: number;
+  borrowerClass: AiAssessmentBorrowerClass;
+  recommendation: string;
+  riskLevel: AiAssessmentRiskLevel;
+  confidence: number;
+  reasoningSummary: string;
 }
 
 export interface Borrower {
@@ -96,6 +127,12 @@ export interface LoanMetrics {
   monthlyPayment: number;
   paymentToIncome: number;
   termAssessment: string;
+}
+
+export interface PredictionComparison {
+  agreement: boolean;
+  probabilityGap: number;
+  summary: string;
 }
 
 export type ScoringResultBorrowerClass = typeof ScoringResultBorrowerClass[keyof typeof ScoringResultBorrowerClass];

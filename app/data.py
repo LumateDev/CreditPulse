@@ -23,7 +23,7 @@ CREDIT_HISTORY_LABELS = {
     "poor": "слабая",
 }
 
-DEMO_BORROWERS = [
+FINAL_CHECK_BORROWERS = [
     Borrower(
         id="anna",
         name="Анна Смирнова",
@@ -89,6 +89,113 @@ DEMO_BORROWERS = [
         debtLoad=0.64,
     ),
 ]
+
+FIRST_NAMES = [
+    "Алексей",
+    "Мария",
+    "Иван",
+    "Ольга",
+    "Дмитрий",
+    "Наталья",
+    "Сергей",
+    "Юлия",
+    "Павел",
+    "Ирина",
+    "Виктор",
+    "Алина",
+    "Роман",
+    "Екатерина",
+    "Георгий",
+    "Ксения",
+]
+
+LAST_NAMES = [
+    "Иванов",
+    "Петрова",
+    "Соколов",
+    "Морозова",
+    "Волков",
+    "Новикова",
+    "Федоров",
+    "Орлова",
+    "Михайлов",
+    "Зайцева",
+    "Павлов",
+    "Беляева",
+    "Козлов",
+    "Семенова",
+    "Громов",
+    "Лебедева",
+]
+
+EMPLOYMENT_TYPES = ["full_time", "self_employed", "temporary", "unemployed"]
+HOUSING_TYPES = ["own", "rent", "mortgage"]
+CREDIT_HISTORIES = ["excellent", "good", "late_payments", "poor"]
+LOAN_PURPOSES = [
+    "ремонт",
+    "автомобиль",
+    "потребительский кредит",
+    "образование",
+    "техника",
+    "медицина",
+    "путешествие",
+    "рефинансирование",
+]
+TERMS = [12, 18, 24, 36, 48, 60, 72]
+
+
+def _synthetic_borrower(index: int) -> Borrower:
+    employment_type = EMPLOYMENT_TYPES[(index * 7 + index // 5) % len(EMPLOYMENT_TYPES)]
+    housing_type = HOUSING_TYPES[(index * 5 + index // 11) % len(HOUSING_TYPES)]
+    credit_history = CREDIT_HISTORIES[(index * 3 + index // 13) % len(CREDIT_HISTORIES)]
+    loan_term = TERMS[(index * 5 + index // 9) % len(TERMS)]
+
+    age = 21 + ((index * 17 + index // 3) % 43)
+    income = 32000 + ((index * 11700 + (index % 9) * 4300) % 178000)
+    employment_years = round(((index * 9) % 180) / 12, 1)
+    if employment_type == "unemployed":
+        employment_years = round(((index * 2) % 10) / 12, 1)
+    elif employment_type == "full_time":
+        employment_years = max(1.2, employment_years)
+
+    debt_load = round(0.12 + ((index * 37 + index // 4) % 66) / 100, 2)
+    if credit_history in {"late_payments", "poor"}:
+        debt_load = min(0.82, round(debt_load + 0.06, 2))
+    if credit_history == "excellent":
+        debt_load = max(0.08, round(debt_load - 0.05, 2))
+
+    loan_multiplier = 4.5 + ((index * 19 + index // 7) % 125) / 10
+    loan_amount = round(income * loan_multiplier / 10000) * 10000
+    interest_rate = round(9.5 + ((index * 23 + index // 6) % 145) / 10, 1)
+    if credit_history == "excellent":
+        interest_rate = max(8.5, round(interest_rate - 2.0, 1))
+    elif credit_history == "poor":
+        interest_rate = min(27.5, round(interest_rate + 2.8, 1))
+
+    past_defaults = credit_history == "poor" and index % 3 == 0
+    if credit_history == "late_payments" and index % 17 == 0:
+        past_defaults = True
+
+    return Borrower(
+        id=f"synthetic-{index:03d}",
+        name=f"{FIRST_NAMES[index % len(FIRST_NAMES)]} {LAST_NAMES[(index * 5) % len(LAST_NAMES)]}",
+        age=age,
+        income=float(income),
+        employmentYears=employment_years,
+        employmentType=employment_type,
+        housingType=housing_type,
+        loanAmount=float(max(90000, loan_amount)),
+        loanTermMonths=loan_term,
+        interestRate=interest_rate,
+        loanPurpose=LOAN_PURPOSES[(index * 11) % len(LOAN_PURPOSES)],
+        creditHistory=credit_history,
+        pastDefaults=past_defaults,
+        debtLoad=debt_load,
+    )
+
+
+TRAINING_BORROWERS = [_synthetic_borrower(index) for index in range(1, 241)]
+DEMO_BORROWERS = FINAL_CHECK_BORROWERS + TRAINING_BORROWERS
 
 
 def format_money(value: float) -> str:

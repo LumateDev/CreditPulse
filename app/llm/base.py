@@ -8,3 +8,7 @@ class LLMProvider(ABC):
     @abstractmethod
     def explain(self, payload: dict[str, Any]) -> str:
         """Return a short human explanation for a scoring result."""
+
+    @abstractmethod
+    def assess(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Return an AI second-opinion risk assessment."""

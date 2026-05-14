@@ -10,7 +10,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
 COPY intro.md tz.md README.md ./
-COPY .env.example ./.env.example
 
 EXPOSE 8000
 

@@ -5,9 +5,11 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 
 from app.config import settings
+from app.comparison import compare_predictions
 from app.data import get_borrower, list_borrower_cards, to_card
 from app.llm import build_llm_provider
 from app.schemas import AnalyzeRequest, AnalyzeResponse, BorrowerCard, HealthResponse
+from app.ml import score_with_classic_ml
 from app.scoring import score_borrower
 
 APP_VERSION = "0.4.0"
@@ -70,17 +72,34 @@ def analyze(payload: AnalyzeRequest) -> dict[str, Any]:
     result = score_borrower(borrower)
     borrower_payload = borrower.model_dump(by_alias=True)
     try:
-        explanation = build_llm_provider().explain(
+        ml_result = score_with_classic_ml(borrower)
+        provider = build_llm_provider()
+        llm_payload = {
+            "borrower": borrower_payload,
+            "result": result,
+            "mlResult": ml_result,
+            "question": payload.question,
+        }
+        ai_assessment = provider.assess(llm_payload)
+        comparison = compare_predictions(ml_result, ai_assessment)
+        explanation = provider.explain(
             {
-                "borrower": borrower_payload,
-                "result": result,
-                "question": payload.question,
+                **llm_payload,
+                "aiAssessment": ai_assessment,
+                "comparison": comparison,
             }
         )
     except Exception as exc:
         raise HTTPException(
             status_code=502,
-            detail=f"LLM provider error: {exc}",
+            detail=f"Analysis provider error: {exc}",
         ) from exc
 
-    return {"borrower": to_card(borrower), "result": result, "explanation": explanation}
+    return {
+        "borrower": to_card(borrower),
+        "result": result,
+        "mlResult": ml_result,
+        "aiAssessment": ai_assessment,
+        "comparison": comparison,
+        "explanation": explanation,
+    }

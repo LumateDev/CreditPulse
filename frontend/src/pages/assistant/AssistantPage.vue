@@ -25,7 +25,11 @@ import { ElMessage } from 'element-plus';
 import { computed, ref } from 'vue';
 
 import { getCreditPulseAPI } from '@/api/generated/creditpulse';
-import type { ScoringResult } from '@/api/generated/creditpulse';
+import type {
+  AiAssessment,
+  PredictionComparison,
+  ScoringResult,
+} from '@/api/generated/creditpulse';
 import { useBorrowers } from '@/composables/useBorrowers';
 import AssistantBorrowerList from '@/pages/assistant/components/AssistantBorrowerList.vue';
 import AssistantChat from '@/pages/assistant/components/AssistantChat.vue';
@@ -35,6 +39,9 @@ interface ChatMessage {
   role: 'user' | 'agent';
   text: string;
   result?: ScoringResult;
+  mlResult?: ScoringResult;
+  aiAssessment?: AiAssessment;
+  comparison?: PredictionComparison;
 }
 
 const api = getCreditPulseAPI();
@@ -117,6 +124,9 @@ async function sendQuestion(question: string) {
       role: 'agent',
       text: response.explanation,
       result: response.result,
+      mlResult: response.mlResult,
+      aiAssessment: response.aiAssessment,
+      comparison: response.comparison,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Не удалось получить ответ от сервера.';
