@@ -1,9 +1,19 @@
 # CreditPulse
 
-CreditPulse — прототип интеллектуальной системы поддержки принятия решений для оценки кредитоспособности заемщика. Проект состоит из двух частей:
+CreditPulse — прототип интеллектуальной системы поддержки принятия решений для оценки кредитоспособности заемщика.
 
-- `backend`: FastAPI API, скоринг, интеграция с LLM-провайдером.
-- `frontend`: Vue 3 + TypeScript приложение, которое раздается через nginx.
+Текущая версия приложения: `0.4.0`.
+
+Проект состоит из двух контейнеров:
+
+- `backend`: FastAPI API, базовый скоринг, интеграция с LLM-провайдером.
+- `frontend`: Vue 3 + TypeScript приложение, собранное Vite и раздаваемое через nginx.
+
+Основные разделы интерфейса:
+
+- `Ассистент` — чат с LLM по выбранной карточке заемщика.
+- `Клиентская база` — локальный справочник клиентов с добавлением, редактированием и удалением.
+- `Настройки` — версия приложения, LLM-провайдер, интеграции и переключатель светлой/темной темы.
 
 ## Демо
 
@@ -11,21 +21,15 @@ CreditPulse — прототип интеллектуальной системы
 
 ## Продакшен-запуск
 
-Продакшен-подобный запуск использует Docker Compose и два контейнера.
-
 Перед первым запуском создайте `.env` на основе `.env.example`:
-
-```bash
-copy .env.example .env
-```
-
-В PowerShell:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-После этого откройте `.env` и заполните реальные значения, например `YANDEX_API_KEY`.
+`.env.example` — это только пример. Реальные ключи, например `YANDEX_API_KEY`, нужно хранить в `.env`.
+
+Запуск:
 
 ```bash
 docker compose up -d --build
@@ -37,12 +41,7 @@ docker compose up -d --build
 http://127.0.0.1:8000
 ```
 
-Сервисы:
-
-- `frontend`: nginx, доступен снаружи на `127.0.0.1:8000`
-- `backend`: FastAPI, доступен внутри compose как `http://backend:8000`
-
-Полезные адреса через nginx:
+Полезные адреса:
 
 ```text
 http://127.0.0.1:8000/api/health
@@ -52,9 +51,7 @@ http://127.0.0.1:8000/openapi.json
 
 ## Переменные окружения
 
-`.env.example` — это только пример файла окружения. Реальные секреты нужно хранить в `.env`. Не кладите настоящие ключи в `.env.example`.
-
-Пример `.env`:
+Пример `.env` для реального Yandex-провайдера:
 
 ```text
 CREDITPULSE_LLM_PROVIDER=yandex
@@ -64,65 +61,51 @@ YANDEX_PROJECT=b1gea2upudrrrnph3fj4
 YANDEX_PROMPT_ID=fvtf6nig20k1irru1ffs
 ```
 
-Compose сначала читает `.env.example`, затем опциональный `.env`, поэтому значения из `.env` переопределяют шаблон.
-
 Для локального режима без внешнего API:
 
 ```text
 CREDITPULSE_LLM_PROVIDER=mock
 ```
 
+Docker Compose сначала читает `.env.example`, затем опциональный `.env`, поэтому значения из `.env` переопределяют шаблон.
+
 ## Режим разработки
 
-Для разработки удобнее запускать backend и frontend отдельными процессами.
+В разработке удобнее запускать backend и frontend отдельными процессами.
 
 ### Backend
 
-Создайте виртуальное окружение:
+Создать виртуальное окружение:
 
 ```bash
 python -m venv .venv
 ```
 
-Активируйте его.
-
-Windows PowerShell:
+Активировать окружение в PowerShell:
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
-Windows CMD:
-
-```cmd
-.venv\Scripts\activate.bat
-```
-
-Linux/macOS:
-
-```bash
-source .venv/bin/activate
-```
-
-Установите Python-зависимости:
+Установить Python-зависимости:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Создайте `.env`, если еще не сделали это:
+Создать `.env`, если он еще не создан:
 
-```bash
-copy .env.example .env
+```powershell
+Copy-Item .env.example .env
 ```
 
-Заполните `.env` реальными значениями или переключите локальный мок:
+Заполнить `.env` реальными значениями или включить локальный мок:
 
 ```text
 CREDITPULSE_LLM_PROVIDER=mock
 ```
 
-Запустите backend:
+Запустить backend:
 
 ```bash
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
@@ -130,26 +113,26 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 
 ### Frontend
 
-Установите npm-зависимости:
+Установить npm-зависимости:
 
 ```bash
 cd frontend
 npm install
 ```
 
-Запустите frontend:
+Запустить Vite dev server:
 
 ```bash
 npm run dev
 ```
 
-Открыть Vite dev server:
+Открыть frontend:
 
 ```text
 http://127.0.0.1:5173
 ```
 
-Vite проксирует `/api` и `/openapi.json` на `http://127.0.0.1:8000`.
+Vite проксирует `/api`, `/docs` и `/openapi.json` на `http://127.0.0.1:8000`.
 
 ## Генерация API-клиента
 
@@ -197,7 +180,7 @@ docker compose config --services
 
 ## API
 
-`GET /api/health` — статус backend и активный LLM-провайдер.
+`GET /api/health` — статус backend, активный LLM-провайдер и версия приложения.
 
 `GET /api/borrowers` — список карточек заемщиков.
 
@@ -214,17 +197,22 @@ docker compose config --services
 }
 ```
 
-Для обратной совместимости backend также принимает старый формат с полной карточкой `borrower`.
+Backend также принимает старый формат с полной карточкой `borrower` для обратной совместимости.
 
-## Архитектура модулей
+## Архитектура
 
-- `app/scoring.py` — базовый модуль скоринга.
+- `app/main.py` — FastAPI-приложение и HTTP endpoints.
 - `app/schemas.py` — Pydantic-схемы API.
 - `app/data.py` — демонстрационные заемщики и display-поля.
+- `app/scoring.py` — базовый модуль скоринга.
 - `app/llm/base.py` — общий интерфейс LLM-провайдера.
 - `app/llm/mock_provider.py` — локальный мок без внешнего API.
 - `app/llm/yandex_provider.py` — интеграция с Yandex Cloud AI через OpenAI-compatible API.
-- `frontend/src/App.vue` — основной интерфейс.
+- `frontend/src/App.vue` — легкая точка входа с `router-view`.
+- `frontend/src/router` — маршруты приложения.
+- `frontend/src/components` — общие компоненты.
+- `frontend/src/pages` — страницы и уникальные для них компоненты.
+- `frontend/src/styles.scss` — только глобальные стили и общие переменные.
 - `frontend/nginx.conf` — nginx-прокси для frontend и backend API.
 
 ## Ограничения прототипа
@@ -232,4 +220,5 @@ docker compose config --services
 - История чатов хранится только в памяти frontend и сбрасывается при перезагрузке страницы.
 - Скоринг пока является детерминированной демонстрационной эвристикой.
 - Демо-заемщики пока хранятся в коде.
+- Изменения на странице `Клиентская база` пока локальные и не сохраняются на backend.
 - LLM-модуль заменяемый: новый провайдер можно подключить через `app/llm/base.py` и `app/llm/factory.py`.

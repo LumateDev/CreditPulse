@@ -68,3 +68,9 @@ class AnalyzeResponse(BaseModel):
     borrower: BorrowerCard
     result: ScoringResult
     explanation: str
+
+
+class HealthResponse(BaseModel):
+    status: str
+    llm_provider: str = Field(alias="llmProvider")
+    version: str

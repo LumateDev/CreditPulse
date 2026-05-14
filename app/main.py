@@ -7,19 +7,30 @@ from fastapi import FastAPI, HTTPException
 from app.config import settings
 from app.data import get_borrower, list_borrower_cards, to_card
 from app.llm import build_llm_provider
-from app.schemas import AnalyzeRequest, AnalyzeResponse, BorrowerCard
+from app.schemas import AnalyzeRequest, AnalyzeResponse, BorrowerCard, HealthResponse
 from app.scoring import score_borrower
+
+APP_VERSION = "0.4.0"
 
 app = FastAPI(
     title="CreditPulse API",
     description="Prototype DSS for borrower scoring and LLM explanations.",
-    version="0.3.0",
+    version=APP_VERSION,
 )
 
 
-@app.get("/api/health", operation_id="getHealth")
+@app.get(
+    "/api/health",
+    response_model=HealthResponse,
+    response_model_by_alias=True,
+    operation_id="getHealth",
+)
 def health() -> dict[str, str]:
-    return {"status": "ok", "llmProvider": settings.llm_provider}
+    return {
+        "status": "ok",
+        "llmProvider": settings.llm_provider,
+        "version": APP_VERSION,
+    }
 
 
 @app.get(

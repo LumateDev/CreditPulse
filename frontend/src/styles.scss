@@ -1,0 +1,43 @@
+:root {
+  --app-bg: var(--el-bg-color-page);
+  --app-panel: var(--el-bg-color);
+  --app-border: var(--el-border-color);
+  --app-text: var(--el-text-color-primary);
+  --app-muted: var(--el-text-color-secondary);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--app-bg);
+  color: var(--app-text);
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+}
+
+button,
+textarea,
+input {
+  font: inherit;
+}
+
+.app-kicker {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--app-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}

@@ -3,7 +3,7 @@
  * Do not edit manually.
  * CreditPulse API
  * Prototype DSS for borrower scoring and LLM explanations.
- * OpenAPI spec version: 0.3.0
+ * OpenAPI spec version: 0.4.0
  */
 import { apiClient } from '../http';
 export type AnalyzeRequestBorrowerId = string | null;
@@ -86,6 +86,12 @@ export interface HTTPValidationError {
   detail?: ValidationError[];
 }
 
+export interface HealthResponse {
+  status: string;
+  llmProvider: string;
+  version: string;
+}
+
 export interface LoanMetrics {
   monthlyPayment: number;
   paymentToIncome: number;
@@ -121,8 +127,6 @@ export interface ValidationError {
   ctx?: ValidationErrorCtx;
 }
 
-export type GetHealth200 = {[key: string]: string};
-
 export const getCreditPulseAPI = () => {
 /**
  * @summary Health
@@ -130,7 +134,7 @@ export const getCreditPulseAPI = () => {
 const getHealth = (
     
  ) => {
-      return apiClient<GetHealth200>(
+      return apiClient<HealthResponse>(
       {url: `/api/health`, method: 'GET'
     },
       );
