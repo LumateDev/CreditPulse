@@ -11,6 +11,7 @@ load_dotenv(".env.example", override=False)
 @dataclass(frozen=True)
 class Settings:
     llm_provider: str = os.getenv("CREDITPULSE_LLM_PROVIDER", "yandex")
+    database_path: str = os.getenv("CREDITPULSE_DATABASE_PATH", "data/creditpulse.sqlite3")
     yandex_api_key: str = os.getenv("YANDEX_API_KEY", "")
     yandex_base_url: str = os.getenv(
         "YANDEX_BASE_URL", "https://ai.api.cloud.yandex.net/v1"

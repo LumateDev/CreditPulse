@@ -6,25 +6,6 @@
  * OpenAPI spec version: 0.4.0
  */
 import { apiClient } from '../http';
-export type AnalyzeRequestBorrowerId = string | null;
-
-export type AnalyzeRequestBorrower = Borrower | null;
-
-export interface AnalyzeRequest {
-  borrowerId?: AnalyzeRequestBorrowerId;
-  borrower?: AnalyzeRequestBorrower;
-  question?: string;
-}
-
-export interface AnalyzeResponse {
-  borrower: BorrowerCard;
-  result: ScoringResult;
-  mlResult: ScoringResult;
-  aiAssessment: AiAssessment;
-  comparison: PredictionComparison;
-  explanation: string;
-}
-
 export type AiAssessmentBorrowerClass = typeof AiAssessmentBorrowerClass[keyof typeof AiAssessmentBorrowerClass];
 
 
@@ -51,6 +32,25 @@ export interface AiAssessment {
   riskLevel: AiAssessmentRiskLevel;
   confidence: number;
   reasoningSummary: string;
+}
+
+export type AnalyzeRequestBorrowerId = string | null;
+
+export type AnalyzeRequestBorrower = Borrower | null;
+
+export interface AnalyzeRequest {
+  borrowerId?: AnalyzeRequestBorrowerId;
+  borrower?: AnalyzeRequestBorrower;
+  question?: string;
+}
+
+export interface AnalyzeResponse {
+  borrower: BorrowerCard;
+  result: ScoringResult;
+  mlResult: ScoringResult;
+  aiAssessment: AiAssessment;
+  comparison: PredictionComparison;
+  explanation: string;
 }
 
 export interface Borrower {
@@ -88,6 +88,25 @@ export interface BorrowerCard {
   display: BorrowerDisplay;
 }
 
+export type BorrowerCreateId = string | null;
+
+export interface BorrowerCreate {
+  id?: BorrowerCreateId;
+  name: string;
+  age: number;
+  income: number;
+  employmentYears: number;
+  employmentType: string;
+  housingType: string;
+  loanAmount: number;
+  loanTermMonths: number;
+  interestRate: number;
+  loanPurpose: string;
+  creditHistory: string;
+  pastDefaults: boolean;
+  debtLoad: number;
+}
+
 export interface BorrowerDisplay {
   employmentType: string;
   housingType: string;
@@ -96,6 +115,35 @@ export interface BorrowerDisplay {
   loanAmount: string;
   debtLoad: string;
   loanTerm: string;
+}
+
+export type ChatMessageRole = typeof ChatMessageRole[keyof typeof ChatMessageRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ChatMessageRole = {
+  user: 'user',
+  agent: 'agent',
+} as const;
+
+export type ChatMessageResult = ScoringResult | null;
+
+export type ChatMessageMlResult = ScoringResult | null;
+
+export type ChatMessageAiAssessment = AiAssessment | null;
+
+export type ChatMessageComparison = PredictionComparison | null;
+
+export interface ChatMessage {
+  id: string;
+  borrowerId: string;
+  role: ChatMessageRole;
+  text: string;
+  result?: ChatMessageResult;
+  mlResult?: ChatMessageMlResult;
+  aiAssessment?: ChatMessageAiAssessment;
+  comparison?: ChatMessageComparison;
+  createdAt: string;
 }
 
 export type FactorSign = typeof FactorSign[keyof typeof FactorSign];
@@ -190,6 +238,20 @@ const listBorrowers = (
     }
   
 /**
+ * @summary Borrower Create
+ */
+const createBorrower = (
+    borrowerCreate: BorrowerCreate,
+ ) => {
+      return apiClient<BorrowerCard>(
+      {url: `/api/borrowers`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: borrowerCreate
+    },
+      );
+    }
+  
+/**
  * @summary Borrower Details
  */
 const getBorrower = (
@@ -197,6 +259,57 @@ const getBorrower = (
  ) => {
       return apiClient<BorrowerCard>(
       {url: `/api/borrowers/${borrowerId}`, method: 'GET'
+    },
+      );
+    }
+  
+/**
+ * @summary Borrower Update
+ */
+const updateBorrower = (
+    borrowerId: string,
+    borrowerCreate: BorrowerCreate,
+ ) => {
+      return apiClient<BorrowerCard>(
+      {url: `/api/borrowers/${borrowerId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: borrowerCreate
+    },
+      );
+    }
+  
+/**
+ * @summary Borrower Delete
+ */
+const deleteBorrower = (
+    borrowerId: string,
+ ) => {
+      return apiClient<void>(
+      {url: `/api/borrowers/${borrowerId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+/**
+ * @summary Chat Messages
+ */
+const listChatMessages = (
+    borrowerId: string,
+ ) => {
+      return apiClient<ChatMessage[]>(
+      {url: `/api/borrowers/${borrowerId}/chat`, method: 'GET'
+    },
+      );
+    }
+  
+/**
+ * @summary Chat Clear
+ */
+const clearChatMessages = (
+    borrowerId: string,
+ ) => {
+      return apiClient<void>(
+      {url: `/api/borrowers/${borrowerId}/chat`, method: 'DELETE'
     },
       );
     }
@@ -215,8 +328,13 @@ const analyzeBorrower = (
       );
     }
   
-return {getHealth,listBorrowers,getBorrower,analyzeBorrower}};
+return {getHealth,listBorrowers,createBorrower,getBorrower,updateBorrower,deleteBorrower,listChatMessages,clearChatMessages,analyzeBorrower}};
 export type GetHealthResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getCreditPulseAPI>['getHealth']>>>
 export type ListBorrowersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getCreditPulseAPI>['listBorrowers']>>>
+export type CreateBorrowerResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getCreditPulseAPI>['createBorrower']>>>
 export type GetBorrowerResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getCreditPulseAPI>['getBorrower']>>>
+export type UpdateBorrowerResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getCreditPulseAPI>['updateBorrower']>>>
+export type DeleteBorrowerResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getCreditPulseAPI>['deleteBorrower']>>>
+export type ListChatMessagesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getCreditPulseAPI>['listChatMessages']>>>
+export type ClearChatMessagesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getCreditPulseAPI>['clearChatMessages']>>>
 export type AnalyzeBorrowerResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getCreditPulseAPI>['analyzeBorrower']>>>

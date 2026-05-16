@@ -7,11 +7,15 @@
 - Основной production-запуск: `docker compose up -d --build`.
 - Development-запуск: backend и frontend отдельными процессами.
 - Версия приложения единая для backend и frontend. Источник правды для UI — `/api/health`.
+- SQLite-БД проекта хранится в `data/creditpulse.sqlite3` и намеренно не игнорируется Git: это общий демо-набор клиентов и историй чатов для команды.
+- Docker Compose монтирует БД через bind mount `./data:/app/data`; `docker compose down -v` не удаляет этот файл. Для сброса БД нужно явно удалить `data/creditpulse.sqlite3`.
+- Перед коммитом изменений данных проверять, что вместе с кодом добавлен актуальный `data/creditpulse.sqlite3`, если менялись клиенты или история чатов.
 
 ## Backend
 
 - Backend написан на FastAPI.
 - API-схемы описываются через Pydantic в `app/schemas.py`.
+- Доступ к SQLite сосредоточен в `app/database.py`; не добавлять альтернативные локальные хранилища клиентов/чатов на frontend.
 - LLM-интеграции подключаются через интерфейс `app/llm/base.py` и фабрику `app/llm/factory.py`.
 - Скоринг пока находится в `app/scoring.py`; при замене модели нужно сохранить контракт ответа для frontend.
 - Перед сдачей backend-изменений запускать:

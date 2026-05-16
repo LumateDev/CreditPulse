@@ -3,7 +3,7 @@
     <PageHeader
       title="Клиентская база"
       eyebrow="Справочник"
-      description="Здесь можно подготовить карточки клиентов для будущего сохранения на backend."
+      description="Здесь можно добавлять, редактировать и удалять клиентов. Данные сохраняются в SQLite на backend."
     >
       <template #actions>
         <el-button type="primary" :icon="Plus" @click="openCreateDialog">
@@ -48,7 +48,7 @@
             Редактировать
           </el-button>
           <el-popconfirm
-            title="Удалить клиента из локального списка?"
+            title="Удалить клиента и его историю чата?"
             confirm-button-text="Удалить"
             cancel-button-text="Отмена"
             @confirm="removeBorrower(row.id)"
@@ -102,9 +102,11 @@
 
 <script setup lang="ts">
 import { Plus } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus';
 import { reactive, ref } from 'vue';
 
-import type { BorrowerCard } from '@/api/generated/creditpulse';
+import { getCreditPulseAPI } from '@/api/generated/creditpulse';
+import type { BorrowerCard, BorrowerCreate } from '@/api/generated/creditpulse';
 import PageHeader from '@/components/PageHeader.vue';
 import { useBorrowers } from '@/composables/useBorrowers';
 
@@ -113,7 +115,8 @@ type ClientForm = Pick<
   'name' | 'age' | 'income' | 'loanAmount' | 'loanTermMonths' | 'creditHistory'
 >;
 
-const { borrowers, isLoading } = useBorrowers();
+const api = getCreditPulseAPI();
+const { borrowers, isLoading, loadBorrowers } = useBorrowers();
 const dialogVisible = ref(false);
 const editingId = ref<string | null>(null);
 const form = reactive<ClientForm>({
@@ -151,15 +154,7 @@ function openEditDialog(row: BorrowerCard) {
   dialogVisible.value = true;
 }
 
-function toDisplayMoney(value: number) {
-  return new Intl.NumberFormat('ru-RU', {
-    style: 'currency',
-    currency: 'RUB',
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-function buildLocalBorrower(id: string): BorrowerCard {
+function buildBorrowerPayload(id?: string): BorrowerCreate {
   return {
     id,
     name: form.name || 'Новый клиент',
@@ -175,32 +170,35 @@ function buildLocalBorrower(id: string): BorrowerCard {
     creditHistory: form.creditHistory,
     pastDefaults: false,
     debtLoad: 0.3,
-    display: {
-      employmentType: 'постоянная',
-      housingType: 'аренда',
-      creditHistory: form.creditHistory,
-      income: toDisplayMoney(form.income),
-      loanAmount: toDisplayMoney(form.loanAmount),
-      loanTerm: `${form.loanTermMonths} мес.`,
-      debtLoad: '30%',
-    },
   };
 }
 
-function saveBorrower() {
-  if (editingId.value) {
-    const index = borrowers.value.findIndex((borrower) => borrower.id === editingId.value);
-    if (index >= 0) {
-      borrowers.value[index] = buildLocalBorrower(editingId.value);
+async function saveBorrower() {
+  try {
+    if (editingId.value) {
+      await api.updateBorrower(editingId.value, buildBorrowerPayload(editingId.value));
+      ElMessage.success('Клиент обновлен.');
+    } else {
+      await api.createBorrower(buildBorrowerPayload());
+      ElMessage.success('Клиент добавлен.');
     }
-  } else {
-    borrowers.value.unshift(buildLocalBorrower(`local-${crypto.randomUUID()}`));
+    await loadBorrowers();
+    dialogVisible.value = false;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Не удалось сохранить клиента.';
+    ElMessage.error(message);
   }
-  dialogVisible.value = false;
 }
 
-function removeBorrower(borrowerId: string) {
-  borrowers.value = borrowers.value.filter((borrower) => borrower.id !== borrowerId);
+async function removeBorrower(borrowerId: string) {
+  try {
+    await api.deleteBorrower(borrowerId);
+    borrowers.value = borrowers.value.filter((borrower) => borrower.id !== borrowerId);
+    ElMessage.success('Клиент удален.');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Не удалось удалить клиента.';
+    ElMessage.error(message);
+  }
 }
 </script>
 

@@ -22,11 +22,12 @@
 
 <script setup lang="ts">
 import { ElMessage } from 'element-plus';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 import { getCreditPulseAPI } from '@/api/generated/creditpulse';
 import type {
   AiAssessment,
+  ChatMessage as ApiChatMessage,
   PredictionComparison,
   ScoringResult,
 } from '@/api/generated/creditpulse';
@@ -49,7 +50,9 @@ const { borrowers, isLoading: borrowersLoading } = useBorrowers();
 const selectedBorrowerId = ref('');
 const search = ref('');
 const pendingBorrowerId = ref<string | null>(null);
+const chatLoadingBorrowerId = ref<string | null>(null);
 const chats = ref<Record<string, ChatMessage[]>>({});
+const loadedChats = ref<Record<string, boolean>>({});
 
 const isAnswerLoading = computed(() => pendingBorrowerId.value !== null);
 
@@ -68,7 +71,8 @@ const selectedBorrower = computed(() => {
 });
 
 const isCurrentChatLoading = computed(() => {
-  return pendingBorrowerId.value === selectedBorrower.value?.id;
+  const borrowerId = selectedBorrower.value?.id;
+  return pendingBorrowerId.value === borrowerId || chatLoadingBorrowerId.value === borrowerId;
 });
 
 const currentMessages = computed(() => {
@@ -82,6 +86,35 @@ function ensureChat(borrowerId: string) {
   }
 }
 
+function mapApiMessage(message: ApiChatMessage): ChatMessage {
+  return {
+    id: message.id,
+    role: message.role,
+    text: message.text,
+    result: message.result ?? undefined,
+    mlResult: message.mlResult ?? undefined,
+    aiAssessment: message.aiAssessment ?? undefined,
+    comparison: message.comparison ?? undefined,
+  };
+}
+
+async function loadChatMessages(borrowerId: string) {
+  ensureChat(borrowerId);
+  if (loadedChats.value[borrowerId]) return;
+
+  chatLoadingBorrowerId.value = borrowerId;
+  try {
+    const messages = await api.listChatMessages(borrowerId);
+    chats.value[borrowerId] = messages.map(mapApiMessage);
+    loadedChats.value[borrowerId] = true;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Не удалось загрузить историю чата.';
+    ElMessage.error(message);
+  } finally {
+    chatLoadingBorrowerId.value = null;
+  }
+}
+
 function selectBorrower(borrowerId: string) {
   if (isAnswerLoading.value) {
     ElMessage.info('Дождитесь ответа агента перед переключением клиента.');
@@ -90,12 +123,20 @@ function selectBorrower(borrowerId: string) {
 
   selectedBorrowerId.value = borrowerId;
   ensureChat(borrowerId);
+  void loadChatMessages(borrowerId);
 }
 
-function resetCurrentChat() {
+async function resetCurrentChat() {
   const borrower = selectedBorrower.value;
   if (!borrower || isAnswerLoading.value) return;
-  chats.value[borrower.id] = [];
+  try {
+    await api.clearChatMessages(borrower.id);
+    chats.value[borrower.id] = [];
+    loadedChats.value[borrower.id] = true;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Не удалось очистить историю чата.';
+    ElMessage.error(message);
+  }
 }
 
 function appendMessage(borrowerId: string, message: Omit<ChatMessage, 'id'>) {
@@ -139,6 +180,18 @@ async function sendQuestion(question: string) {
     pendingBorrowerId.value = null;
   }
 }
+
+watch(
+  () => selectedBorrower.value?.id,
+  (borrowerId) => {
+    if (!borrowerId) return;
+    if (!selectedBorrowerId.value) {
+      selectedBorrowerId.value = borrowerId;
+    }
+    void loadChatMessages(borrowerId);
+  },
+  { immediate: true },
+);
 </script>
 
 <style scoped lang="scss">

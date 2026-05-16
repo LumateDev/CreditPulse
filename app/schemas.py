@@ -38,6 +38,25 @@ class BorrowerCard(Borrower):
     display: BorrowerDisplay
 
 
+class BorrowerCreate(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str | None = None
+    name: str
+    age: int
+    income: float
+    employment_years: float = Field(alias="employmentYears")
+    employment_type: str = Field(alias="employmentType")
+    housing_type: str = Field(alias="housingType")
+    loan_amount: float = Field(alias="loanAmount")
+    loan_term_months: int = Field(alias="loanTermMonths")
+    interest_rate: float = Field(alias="interestRate")
+    loan_purpose: str = Field(alias="loanPurpose")
+    credit_history: str = Field(alias="creditHistory")
+    past_defaults: bool = Field(alias="pastDefaults")
+    debt_load: float = Field(alias="debtLoad")
+
+
 class Factor(BaseModel):
     name: str
     sign: Literal["+", "-"]
@@ -71,6 +90,18 @@ class PredictionComparison(BaseModel):
     agreement: bool
     probability_gap: float = Field(alias="probabilityGap")
     summary: str
+
+
+class ChatMessage(BaseModel):
+    id: str
+    borrower_id: str = Field(alias="borrowerId")
+    role: Literal["user", "agent"]
+    text: str
+    result: ScoringResult | None = None
+    ml_result: ScoringResult | None = Field(default=None, alias="mlResult")
+    ai_assessment: AiAssessment | None = Field(default=None, alias="aiAssessment")
+    comparison: PredictionComparison | None = None
+    created_at: str = Field(alias="createdAt")
 
 
 class AnalyzeRequest(BaseModel):
