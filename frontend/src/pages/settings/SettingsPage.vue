@@ -58,9 +58,10 @@ import { onMounted, ref } from 'vue';
 import { getCreditPulseAPI } from '@/api/generated/creditpulse';
 import PageHeader from '@/components/PageHeader.vue';
 import ThemeToggle from '@/components/ThemeToggle.vue';
+import { APP_VERSION } from '@/version';
 
 const api = getCreditPulseAPI();
-const appVersion = ref('0.4.0');
+const appVersion = ref(APP_VERSION);
 const llmProvider = ref('...');
 
 onMounted(async () => {

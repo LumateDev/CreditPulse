@@ -73,10 +73,11 @@ import { useRoute } from 'vue-router';
 
 import { getCreditPulseAPI } from '@/api/generated/creditpulse';
 import { useAppStore } from '@/stores/AppStore';
+import { APP_VERSION } from '@/version';
 
 const route = useRoute();
 const api = getCreditPulseAPI();
-const appVersion = ref('0.4.0');
+const appVersion = ref(APP_VERSION);
 const { isSidebarCollapsed, sidebarWidth, toggleSidebar } = useAppStore();
 
 const activePath = computed(() => route.path);

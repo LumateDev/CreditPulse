@@ -31,8 +31,7 @@ from app.schemas import (
 )
 from app.ml import score_with_classic_ml
 from app.scoring import score_borrower
-
-APP_VERSION = "0.4.0"
+from app.version import APP_VERSION
 
 
 @asynccontextmanager

@@ -19,6 +19,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.vue", "orval.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.vue", "orval.config.ts", "package.json"],
   "references": []
 }

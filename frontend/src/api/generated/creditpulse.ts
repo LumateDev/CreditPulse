@@ -3,7 +3,7 @@
  * Do not edit manually.
  * CreditPulse API
  * Prototype DSS for borrower scoring and LLM explanations.
- * OpenAPI spec version: 0.4.0
+ * OpenAPI spec version: 0.4.1
  */
 import { apiClient } from '../http';
 export type AiAssessmentBorrowerClass = typeof AiAssessmentBorrowerClass[keyof typeof AiAssessmentBorrowerClass];
