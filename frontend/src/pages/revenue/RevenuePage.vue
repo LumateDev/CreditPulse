@@ -422,8 +422,31 @@ const moneyBarOptions: ChartOptions<'bar'> = {
 };
 
 const horizontalMoneyOptions: ChartOptions<'bar'> = {
-  ...moneyBarOptions,
+  responsive: true,
+  maintainAspectRatio: false,
   indexAxis: 'y',
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      callbacks: {
+        label: (item) => formatMoney(Number(item.raw ?? 0)),
+      },
+    },
+  },
+  scales: {
+    x: {
+      grid: { color: 'rgba(144, 147, 153, 0.18)' },
+      ticks: {
+        callback: (value) => formatCompactMoney(Number(value)),
+      },
+    },
+    y: {
+      grid: { display: false },
+      ticks: {
+        autoSkip: false,
+      },
+    },
+  },
 };
 
 const mixedBarOptions: ChartOptions<'bar'> = {
