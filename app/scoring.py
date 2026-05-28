@@ -98,11 +98,15 @@ def score_borrower(borrower: Borrower | dict[str, Any]) -> dict[str, Any]:
 
     if employment_type in {"temporary", "unemployed"}:
         add("\u043d\u0435\u0441\u0442\u0430\u0431\u0438\u043b\u044c\u043d\u044b\u0439 \u0442\u0438\u043f \u0437\u0430\u043d\u044f\u0442\u043e\u0441\u0442\u0438", 0.1)
+    elif employment_type == "part_time":
+        add("\u0447\u0430\u0441\u0442\u0438\u0447\u043d\u0430\u044f \u0437\u0430\u043d\u044f\u0442\u043e\u0441\u0442\u044c", 0.05)
     elif employment_type == "full_time":
         add("\u043f\u043e\u0441\u0442\u043e\u044f\u043d\u043d\u0430\u044f \u0437\u0430\u043d\u044f\u0442\u043e\u0441\u0442\u044c", -0.04)
 
     if housing_type == "own":
         add("\u0441\u043e\u0431\u0441\u0442\u0432\u0435\u043d\u043d\u043e\u0435 \u0436\u0438\u043b\u044c\u0435", -0.05)
+    elif housing_type == "parents":
+        add("\u043f\u0440\u043e\u0436\u0438\u0432\u0430\u043d\u0438\u0435 \u0443 \u0440\u043e\u0434\u0438\u0442\u0435\u043b\u0435\u0439", -0.02)
     elif housing_type == "rent":
         add("\u0430\u0440\u0435\u043d\u0434\u043d\u043e\u0435 \u0436\u0438\u043b\u044c\u0435", 0.04)
 

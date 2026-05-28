@@ -132,19 +132,61 @@
         <el-form-item label="Доход">
           <el-input-number v-model="form.income" :min="0" :step="5000" />
         </el-form-item>
+        <el-form-item label="Стаж, лет">
+          <el-input-number v-model="form.employmentYears" :min="0" :max="60" :step="0.5" />
+        </el-form-item>
+        <el-form-item label="Тип занятости">
+          <el-select v-model="form.employmentType">
+            <el-option
+              v-for="option in employmentTypeOptions"
+              :key="option.value"
+              :label="option.label"
+              :value="option.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="Жилье">
+          <el-select v-model="form.housingType">
+            <el-option
+              v-for="option in housingTypeOptions"
+              :key="option.value"
+              :label="option.label"
+              :value="option.value"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item label="Сумма кредита">
           <el-input-number v-model="form.loanAmount" :min="0" :step="10000" />
         </el-form-item>
         <el-form-item label="Срок, мес.">
           <el-input-number v-model="form.loanTermMonths" :min="1" :max="120" />
         </el-form-item>
+        <el-form-item label="Процентная ставка, %">
+          <el-input-number v-model="form.interestRate" :min="0" :max="60" :step="0.1" />
+        </el-form-item>
+        <el-form-item label="Цель кредита">
+          <el-input v-model="form.loanPurpose" />
+        </el-form-item>
         <el-form-item label="Кредитная история">
           <el-select v-model="form.creditHistory">
-            <el-option label="Отличная" value="excellent" />
-            <el-option label="Хорошая" value="good" />
-            <el-option label="Просрочки" value="late_payments" />
-            <el-option label="Слабая" value="poor" />
+            <el-option
+              v-for="option in creditHistoryOptions"
+              :key="option.value"
+              :label="option.label"
+              :value="option.value"
+            />
           </el-select>
+        </el-form-item>
+        <el-form-item label="Прошлые дефолты">
+          <el-switch
+            v-model="form.pastDefaults"
+            active-text="Есть"
+            inactive-text="Нет"
+            inline-prompt
+          />
+        </el-form-item>
+        <el-form-item label="Долговая нагрузка, %">
+          <el-input-number v-model="debtLoadPercent" :min="0" :max="100" :step="1" />
         </el-form-item>
       </el-form>
 
@@ -158,7 +200,7 @@
 
 <script setup lang="ts">
 import { Plus, RefreshRight, Search } from '@element-plus/icons-vue';
-import { ElMessage } from 'element-plus';
+import { ElMessage } from 'element-plus/es/components/message/index';
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue';
 
 import { getCreditPulseAPI } from '@/api/generated/creditpulse';
@@ -166,10 +208,7 @@ import type { BorrowerCard, BorrowerCreate } from '@/api/generated/creditpulse';
 import PageHeader from '@/components/PageHeader.vue';
 import { useBorrowers } from '@/composables/useBorrowers';
 
-type ClientForm = Pick<
-  BorrowerCard,
-  'name' | 'age' | 'income' | 'loanAmount' | 'loanTermMonths' | 'creditHistory'
->;
+type ClientForm = Omit<BorrowerCreate, 'id'>;
 
 type SortOrder = 'ascending' | 'descending' | null;
 
@@ -190,13 +229,50 @@ const debtLoadFilter = ref('');
 const currentPage = ref(1);
 const pageSize = ref(25);
 const sortState = ref<SortChange>({});
-const form = reactive<ClientForm>({
+const defaultClientForm: ClientForm = {
   name: '',
   age: 30,
   income: 80000,
+  employmentYears: 1,
+  employmentType: 'full_time',
+  housingType: 'rent',
   loanAmount: 500000,
   loanTermMonths: 24,
+  interestRate: 15,
+  loanPurpose: 'потребительский кредит',
   creditHistory: 'good',
+  pastDefaults: false,
+  debtLoad: 0.3,
+};
+const form = reactive<ClientForm>({ ...defaultClientForm });
+
+const employmentTypeOptions = [
+  { label: 'Постоянная', value: 'full_time' },
+  { label: 'Частичная занятость', value: 'part_time' },
+  { label: 'Самозанятость', value: 'self_employed' },
+  { label: 'Временная', value: 'temporary' },
+  { label: 'Без работы', value: 'unemployed' },
+];
+
+const housingTypeOptions = [
+  { label: 'Собственное', value: 'own' },
+  { label: 'У родителей', value: 'parents' },
+  { label: 'Аренда', value: 'rent' },
+  { label: 'Ипотека', value: 'mortgage' },
+];
+
+const creditHistoryOptions = [
+  { label: 'Отличная', value: 'excellent' },
+  { label: 'Хорошая', value: 'good' },
+  { label: 'Просрочки', value: 'late_payments' },
+  { label: 'Слабая', value: 'poor' },
+];
+
+const debtLoadPercent = computed({
+  get: () => Math.round(form.debtLoad * 100),
+  set: (value: number | undefined) => {
+    form.debtLoad = Number(((value ?? 0) / 100).toFixed(2));
+  },
 });
 
 let searchTimer: number | undefined;
@@ -305,14 +381,7 @@ function resetFilters() {
 
 function openCreateDialog() {
   editingId.value = null;
-  Object.assign(form, {
-    name: '',
-    age: 30,
-    income: 80000,
-    loanAmount: 500000,
-    loanTermMonths: 24,
-    creditHistory: 'good',
-  });
+  Object.assign(form, defaultClientForm);
   dialogVisible.value = true;
 }
 
@@ -322,9 +391,16 @@ function openEditDialog(row: BorrowerCard) {
     name: row.name,
     age: row.age,
     income: row.income,
+    employmentYears: row.employmentYears,
+    employmentType: row.employmentType,
+    housingType: row.housingType,
     loanAmount: row.loanAmount,
     loanTermMonths: row.loanTermMonths,
+    interestRate: row.interestRate,
+    loanPurpose: row.loanPurpose,
     creditHistory: row.creditHistory,
+    pastDefaults: row.pastDefaults,
+    debtLoad: row.debtLoad,
   });
   dialogVisible.value = true;
 }
@@ -332,19 +408,19 @@ function openEditDialog(row: BorrowerCard) {
 function buildBorrowerPayload(id?: string): BorrowerCreate {
   return {
     id,
-    name: form.name || 'Новый клиент',
+    name: form.name.trim() || 'Новый клиент',
     age: form.age,
     income: form.income,
-    employmentYears: 1,
-    employmentType: 'full_time',
-    housingType: 'rent',
+    employmentYears: form.employmentYears,
+    employmentType: form.employmentType,
+    housingType: form.housingType,
     loanAmount: form.loanAmount,
     loanTermMonths: form.loanTermMonths,
-    interestRate: 15,
-    loanPurpose: 'потребительский кредит',
+    interestRate: form.interestRate,
+    loanPurpose: form.loanPurpose.trim() || 'потребительский кредит',
     creditHistory: form.creditHistory,
-    pastDefaults: false,
-    debtLoad: 0.3,
+    pastDefaults: form.pastDefaults,
+    debtLoad: form.debtLoad,
   };
 }
 

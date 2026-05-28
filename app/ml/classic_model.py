@@ -4,10 +4,12 @@ from functools import lru_cache
 from typing import Any
 
 from app.data import TRAINING_BORROWERS
+from app.database import list_borrowers
 from app.schemas import Borrower
 from app.scoring import assess_term, clamp, estimate_monthly_payment
 
 APPROVAL_THRESHOLD = 0.55
+MAX_TRAINING_BORROWERS = 5000
 
 
 def _borrower_features(borrower: Borrower) -> dict[str, Any]:
@@ -46,11 +48,27 @@ def _synthetic_label(borrower: Borrower) -> int:
     risk -= 0.08 if borrower.credit_history == "excellent" else 0
     risk += 0.18 if borrower.past_defaults else 0
     risk += 0.08 if borrower.employment_type in {"temporary", "unemployed"} else 0
+    risk += 0.04 if borrower.employment_type == "part_time" else 0
     risk -= 0.05 if borrower.employment_type == "full_time" else 0
     risk -= 0.05 if borrower.housing_type == "own" else 0
+    risk -= 0.02 if borrower.housing_type == "parents" else 0
     risk += 0.04 if borrower.age < 25 else 0
     risk += 0.04 if borrower.loan_term_months >= 60 else 0
     return int(clamp(risk) >= APPROVAL_THRESHOLD)
+
+
+def _load_training_borrowers() -> list[Borrower]:
+    try:
+        borrowers = list_borrowers()
+    except Exception:
+        return TRAINING_BORROWERS
+    if len(borrowers) < 100:
+        return TRAINING_BORROWERS
+    if len(borrowers) <= MAX_TRAINING_BORROWERS:
+        return borrowers
+
+    step = len(borrowers) / MAX_TRAINING_BORROWERS
+    return [borrowers[int(index * step)] for index in range(MAX_TRAINING_BORROWERS)]
 
 
 @lru_cache(maxsize=1)
@@ -94,8 +112,9 @@ def _build_model() -> Any:
             ("model", model),
         ]
     )
-    x_train = [_borrower_features(borrower) for borrower in TRAINING_BORROWERS]
-    y_train = [_synthetic_label(borrower) for borrower in TRAINING_BORROWERS]
+    training_borrowers = _load_training_borrowers()
+    x_train = [_borrower_features(borrower) for borrower in training_borrowers]
+    y_train = [_synthetic_label(borrower) for borrower in training_borrowers]
     pipeline.fit(x_train, y_train)
     return pipeline
 
@@ -133,8 +152,13 @@ def _explain_features(borrower: Borrower, probability: float) -> list[dict[str, 
 
     if borrower.employment_type in {"temporary", "unemployed"}:
         candidates.append(_factor("нестабильная занятость", "+", 0.08))
+    elif borrower.employment_type == "part_time":
+        candidates.append(_factor("частичная занятость", "+", 0.05))
     elif borrower.employment_type == "full_time" and borrower.employment_years >= 3:
         candidates.append(_factor("стабильная занятость", "-", 0.07))
+
+    if borrower.housing_type == "parents":
+        candidates.append(_factor("проживание у родителей", "-", 0.03))
 
     if borrower.loan_term_months >= 60:
         candidates.append(_factor("длинный срок кредита", "+", 0.05))

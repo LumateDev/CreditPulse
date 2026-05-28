@@ -46,6 +46,10 @@ class MockLLMProvider(LLMProvider):
             risk += 0.19
         if borrower["employmentType"] in {"temporary", "unemployed"}:
             risk += 0.08
+        elif borrower["employmentType"] == "part_time":
+            risk += 0.04
+        if borrower["housingType"] == "parents":
+            risk -= 0.02
         if borrower["loanTermMonths"] >= 60:
             risk += 0.04
 

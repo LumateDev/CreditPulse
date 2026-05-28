@@ -5,6 +5,7 @@ from app.schemas import Borrower, BorrowerCard, BorrowerDisplay
 
 EMPLOYMENT_LABELS = {
     "full_time": "постоянная",
+    "part_time": "частичная занятость",
     "self_employed": "самозанятость",
     "temporary": "временная",
     "unemployed": "без работы",
@@ -12,6 +13,7 @@ EMPLOYMENT_LABELS = {
 
 HOUSING_LABELS = {
     "own": "собственное",
+    "parents": "у родителей",
     "rent": "аренда",
     "mortgage": "ипотека",
 }
@@ -128,8 +130,8 @@ LAST_NAMES = [
     "Лебедева",
 ]
 
-EMPLOYMENT_TYPES = ["full_time", "self_employed", "temporary", "unemployed"]
-HOUSING_TYPES = ["own", "rent", "mortgage"]
+EMPLOYMENT_TYPES = ["full_time", "part_time", "self_employed", "temporary", "unemployed"]
+HOUSING_TYPES = ["own", "parents", "rent", "mortgage"]
 CREDIT_HISTORIES = ["excellent", "good", "late_payments", "poor"]
 LOAN_PURPOSES = [
     "ремонт",
