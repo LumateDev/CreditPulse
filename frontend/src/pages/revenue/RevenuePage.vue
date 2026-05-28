@@ -205,8 +205,8 @@ interface ProfitGroup {
 }
 
 const { borrowers, isLoading } = useBorrowers();
-const fundingRatePercent = ref(8);
-const lossGivenDefaultPercent = ref(45);
+const fundingRatePercent = ref(2);
+const lossGivenDefaultPercent = ref(20);
 const approvedOnly = ref(true);
 const dealMode = ref<'all' | 'profitable' | 'loss'>('all');
 const dealModeOptions = [
