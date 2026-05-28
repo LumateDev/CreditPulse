@@ -29,6 +29,10 @@
           <el-icon><Money /></el-icon>
           <template #title>Прогноз доходов</template>
         </el-menu-item>
+        <el-menu-item index="/scenarios">
+          <el-icon><TrendCharts /></el-icon>
+          <template #title>Сценарии</template>
+        </el-menu-item>
         <el-menu-item index="/settings">
           <el-icon><Setting /></el-icon>
           <template #title>Настройки</template>
@@ -76,6 +80,7 @@ import {
   DataAnalysis,
   Money,
   Setting,
+  TrendCharts,
   User,
 } from '@element-plus/icons-vue';
 import { computed, onMounted, ref } from 'vue';

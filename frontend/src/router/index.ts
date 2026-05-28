@@ -5,6 +5,7 @@ import AnalyticsPage from '@/pages/analytics/AnalyticsPage.vue';
 import AssistantPage from '@/pages/assistant/AssistantPage.vue';
 import ClientsPage from '@/pages/clients/ClientsPage.vue';
 import RevenuePage from '@/pages/revenue/RevenuePage.vue';
+import ScenariosPage from '@/pages/scenarios/ScenariosPage.vue';
 import SettingsPage from '@/pages/settings/SettingsPage.vue';
 
 export const router = createRouter({
@@ -37,6 +38,12 @@ export const router = createRouter({
           name: 'revenue',
           component: RevenuePage,
           meta: { title: 'Прогноз доходов' },
+        },
+        {
+          path: 'scenarios',
+          name: 'scenarios',
+          component: ScenariosPage,
+          meta: { title: 'Сценарии' },
         },
         {
           path: 'settings',
