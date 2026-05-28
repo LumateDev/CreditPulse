@@ -25,6 +25,10 @@
           <el-icon><DataAnalysis /></el-icon>
           <template #title>Аналитика</template>
         </el-menu-item>
+        <el-menu-item index="/revenue">
+          <el-icon><Money /></el-icon>
+          <template #title>Прогноз доходов</template>
+        </el-menu-item>
         <el-menu-item index="/settings">
           <el-icon><Setting /></el-icon>
           <template #title>Настройки</template>
@@ -70,6 +74,7 @@ import {
   ChatDotRound,
   CreditCard,
   DataAnalysis,
+  Money,
   Setting,
   User,
 } from '@element-plus/icons-vue';
