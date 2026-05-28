@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
 import AppShell from '@/components/AppShell.vue';
+import AnalyticsPage from '@/pages/analytics/AnalyticsPage.vue';
 import AssistantPage from '@/pages/assistant/AssistantPage.vue';
 import ClientsPage from '@/pages/clients/ClientsPage.vue';
 import SettingsPage from '@/pages/settings/SettingsPage.vue';
@@ -23,6 +24,12 @@ export const router = createRouter({
           name: 'clients',
           component: ClientsPage,
           meta: { title: 'Клиентская база' },
+        },
+        {
+          path: 'analytics',
+          name: 'analytics',
+          component: AnalyticsPage,
+          meta: { title: 'Аналитика' },
         },
         {
           path: 'settings',

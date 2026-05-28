@@ -16,7 +16,7 @@
       @update:model-value="emit('update:search', String($event))"
     />
 
-    <el-scrollbar v-loading="loading" class="assistant-borrowers__scroll">
+    <el-scrollbar ref="scrollbarRef" v-loading="loading" class="assistant-borrowers__scroll">
       <div class="borrower-list">
         <button
           v-for="borrower in borrowers"
@@ -62,19 +62,38 @@
         </button>
       </div>
     </el-scrollbar>
+
+    <footer class="assistant-borrowers__pagination">
+      <el-pagination
+        :current-page="currentPage"
+        :pager-count="5"
+        :page-size="pageSize"
+        :page-sizes="[25, 50, 100]"
+        :total="total"
+        background
+        layout="sizes, prev, pager, next"
+        small
+        @update:current-page="emit('update:currentPage', $event)"
+        @update:page-size="emit('update:pageSize', $event)"
+      />
+    </footer>
   </aside>
 </template>
 
 <script setup lang="ts">
 import { Search } from '@element-plus/icons-vue';
+import { nextTick, ref, watch } from 'vue';
 
 import type { BorrowerCard } from '@/api/generated/creditpulse';
 import PageHeader from '@/components/PageHeader.vue';
 
-defineProps<{
+const props = defineProps<{
   borrowers: BorrowerCard[];
   selectedId: string;
   search: string;
+  currentPage: number;
+  pageSize: number;
+  total: number;
   loading: boolean;
   disabled: boolean;
 }>();
@@ -82,13 +101,26 @@ defineProps<{
 const emit = defineEmits<{
   select: [borrowerId: string];
   'update:search': [value: string];
+  'update:currentPage': [value: number];
+  'update:pageSize': [value: number];
 }>();
+
+const scrollbarRef = ref<{ setScrollTop: (value: number) => void } | null>(null);
+
+watch(
+  () => [props.currentPage, props.pageSize, props.search],
+  () => {
+    void nextTick(() => {
+      scrollbarRef.value?.setScrollTop(0);
+    });
+  },
+);
 </script>
 
 <style scoped lang="scss">
 .assistant-borrowers {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   gap: 16px;
   min-width: 0;
   min-height: 0;
@@ -99,15 +131,48 @@ const emit = defineEmits<{
   padding: 20px;
 
   &__scroll {
-    flex: 1;
     min-height: 0;
+
+    :deep(.el-scrollbar__wrap) {
+      overflow-x: hidden;
+    }
+  }
+
+  &__pagination {
+    min-width: 0;
+    overflow: hidden;
+    border-top: 1px solid var(--app-border);
+    padding-top: 12px;
+
+    :deep(.el-pagination) {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 6px;
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    :deep(.el-pagination__sizes) {
+      flex: 0 1 118px;
+      min-width: 0;
+      margin-right: 0;
+    }
+
+    :deep(.el-select) {
+      width: 118px;
+    }
+
+    :deep(.el-pager) {
+      min-width: 0;
+    }
   }
 }
 
 .borrower-list {
   display: grid;
   gap: 12px;
-  padding-right: 2px;
+  padding: 0 2px 2px 0;
 }
 
 .borrower-card {
@@ -175,6 +240,16 @@ const emit = defineEmits<{
 @media (max-width: 1100px) {
   .assistant-borrowers__scroll {
     max-height: 460px;
+  }
+}
+
+@media (max-width: 520px) {
+  .assistant-borrowers__pagination {
+    :deep(.el-pagination) {
+      justify-content: flex-start;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
   }
 }
 </style>

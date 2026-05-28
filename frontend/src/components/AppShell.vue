@@ -21,6 +21,10 @@
           <el-icon><User /></el-icon>
           <template #title>Клиентская база</template>
         </el-menu-item>
+        <el-menu-item index="/analytics">
+          <el-icon><DataAnalysis /></el-icon>
+          <template #title>Аналитика</template>
+        </el-menu-item>
         <el-menu-item index="/settings">
           <el-icon><Setting /></el-icon>
           <template #title>Настройки</template>
@@ -65,6 +69,7 @@ import {
   ArrowRight,
   ChatDotRound,
   CreditCard,
+  DataAnalysis,
   Setting,
   User,
 } from '@element-plus/icons-vue';

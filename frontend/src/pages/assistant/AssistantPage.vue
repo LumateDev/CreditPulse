@@ -2,8 +2,11 @@
   <section class="assistant-page">
     <AssistantBorrowerList
       v-model:search="search"
-      :borrowers="filteredBorrowers"
+      v-model:current-page="currentPage"
+      v-model:page-size="pageSize"
+      :borrowers="paginatedBorrowers"
       :selected-id="selectedBorrowerId"
+      :total="filteredBorrowers.length"
       :loading="borrowersLoading"
       :disabled="isAnswerLoading"
       @select="selectBorrower"
@@ -49,6 +52,8 @@ const api = getCreditPulseAPI();
 const { borrowers, isLoading: borrowersLoading } = useBorrowers();
 const selectedBorrowerId = ref('');
 const search = ref('');
+const currentPage = ref(1);
+const pageSize = ref(25);
 const pendingBorrowerId = ref<string | null>(null);
 const chatLoadingBorrowerId = ref<string | null>(null);
 const chats = ref<Record<string, ChatMessage[]>>({});
@@ -62,6 +67,11 @@ const filteredBorrowers = computed(() => {
   return borrowers.value.filter((borrower) =>
     `${borrower.name} ${borrower.loanPurpose}`.toLowerCase().includes(query),
   );
+});
+
+const paginatedBorrowers = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  return filteredBorrowers.value.slice(start, start + pageSize.value);
 });
 
 const selectedBorrower = computed(() => {
@@ -180,6 +190,17 @@ async function sendQuestion(question: string) {
     pendingBorrowerId.value = null;
   }
 }
+
+watch(search, () => {
+  currentPage.value = 1;
+});
+
+watch([filteredBorrowers, pageSize], () => {
+  const maxPage = Math.max(1, Math.ceil(filteredBorrowers.value.length / pageSize.value));
+  if (currentPage.value > maxPage) {
+    currentPage.value = maxPage;
+  }
+});
 
 watch(
   () => selectedBorrower.value?.id,
