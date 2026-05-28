@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 from app.data import TRAINING_BORROWERS
@@ -10,6 +11,7 @@ from app.scoring import assess_term, clamp, estimate_monthly_payment
 
 APPROVAL_THRESHOLD = 0.55
 MAX_TRAINING_BORROWERS = 5000
+MODEL_PATH = Path("models/creditpulse_ensemble.joblib")
 
 
 def _borrower_features(borrower: Borrower) -> dict[str, Any]:
@@ -73,6 +75,18 @@ def _load_training_borrowers() -> list[Borrower]:
 
 @lru_cache(maxsize=1)
 def _build_model() -> Any:
+    if MODEL_PATH.exists():
+        try:
+            from joblib import load
+        except ImportError as exc:
+            raise RuntimeError("Install joblib to load the classic ML model") from exc
+        return load(MODEL_PATH)
+
+    training_borrowers = _load_training_borrowers()
+    return _fit_model(training_borrowers)
+
+
+def _fit_model(training_borrowers: list[Borrower]) -> Any:
     try:
         from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier, VotingClassifier
         from sklearn.feature_extraction import DictVectorizer
@@ -112,7 +126,6 @@ def _build_model() -> Any:
             ("model", model),
         ]
     )
-    training_borrowers = _load_training_borrowers()
     x_train = [_borrower_features(borrower) for borrower in training_borrowers]
     y_train = [_synthetic_label(borrower) for borrower in training_borrowers]
     pipeline.fit(x_train, y_train)

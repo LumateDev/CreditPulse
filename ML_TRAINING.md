@@ -31,6 +31,17 @@
 
 ## Пример offline-обучения и сохранения модели
 
+Актуальный способ переобучить classic ML модель на текущем наборе клиентов из
+`data/creditpulse.sqlite3`:
+
+```bash
+python scripts/train_classic_model.py
+```
+
+Скрипт обучает ансамбль, печатает метрики holdout-проверки и сохраняет артефакт в
+`models/creditpulse_ensemble.joblib`. Runtime сначала пытается загрузить этот файл,
+а если его нет, использует fallback с обучением модели в памяти.
+
 ```python
 from joblib import dump
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier, VotingClassifier
